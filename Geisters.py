@@ -20,8 +20,9 @@ enemyblueImg = pygame.image.load("otherblue.png").convert()
 #ボードのマス
 board = [0] * 36
 
-#ターンのカウント
-Turn_Count = 0
+#ターンのカウント(被ってました、消します)
+#Turn_Count = 0
+
 
 #クリックされたマス
 Click_Square = 0
@@ -46,6 +47,9 @@ Enemy_blue_Count = 0
 
 #ゲームのターン,偶数で自分,奇数で相手
 Game_turn = 0
+
+#前ループでのターンのカウント(ボード入れ替え用)
+Back_Game_turn = 0
 
 #マス移動時、その前のクリックしたマスを保存するための変数
 My_Click_Piece = 0
@@ -74,7 +78,7 @@ sysfont = pygame.font.SysFont(None, 80)
 #駒設置関数
 def Set_Pieces(boards = [0]*36, Click_Squares = 0, Counter = 0, Game_turn = 0):
 
-    if Game_turn == 0:
+    if Game_turn == 0 or Game_turn == 1:
         
         if Counter < 4 and (24 < Click_Squares <29 or 30< Click_Squares <35)\
            and boards[Click_Squares] == 0:
@@ -90,30 +94,12 @@ def Set_Pieces(boards = [0]*36, Click_Squares = 0, Counter = 0, Game_turn = 0):
                 Counter += 1
                 if Counter == 8:
                     Counter = 0
-                    Game_turn = 1                  
+                    Game_turn += 1                  
         else:
                 Click_flag = 0
 
-    elif Game_turn == 1:
-        
-        if Counter < 4 and (0 < Click_Squares < 5 or 6 < Click_Squares < 11) \
-           and boards[Click_Squares] == 0:
-            
-                boards[Click_Squares] = My_red
-                Click_flag = 0
-                Counter += 1
 
-        elif (0 < Click_Squares < 5 or 6 < Click_Squares < 11) \
-             and boards[Click_Squares] == 0:
-                boards[Click_Squares] = My_blue
-                Click_flag = 0
-                Counter += 1
-                if Counter == 8:
-                    Counter = 0
-                    Game_turn = 2                  
-        else:
-                Click_flag = 0
-        
+       
 
     return Counter, Click_flag, Game_turn
 
@@ -180,17 +166,23 @@ while True:
 #        Win_Check(Enemy_red_Count, Enemy_blue_Count)
 
 
-    #ターンごとのMy,Otherの切り替え
+    #ターンごとのMy,Otherの切り替え,ボードも切りかえ
     if(Game_turn % 2 == 1):
         My_red = 3
         My_blue = 4
         Enemy_red = 1
-        Enemy_blue = 2
+        Enemy_blue = 2          
     else:
         My_red = 1
         My_blue = 2
         Enemy_red = 3
         Enemy_blue = 4
+
+    if(Back_Game_turn != Game_turn):
+            for i in range(18):
+                board[i], board[35-i] = board[35-i], board[i] 
+
+    Back_Game_turn = Game_turn
 
 
     #これ以降画像表示
