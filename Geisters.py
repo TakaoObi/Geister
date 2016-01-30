@@ -70,6 +70,9 @@ Counter = 0
 #文字表示用のフォント
 sysfont = pygame.font.SysFont(None, 80)
 
+#コマ選択or移動先選択のクリック識別
+Move_Click_flag = False
+
 #以下デバッグ用
 #あれば付け足してください
 
@@ -96,7 +99,7 @@ def Set_Pieces(boards = [0]*36, Click_Squares = 0, Counter = 0, Game_turn = 0):
                     Counter = 0
                     Game_turn += 1                  
         else:
-                Click_flag = 0
+             Click_flag = 0
 
 
        
@@ -122,8 +125,47 @@ def Click_Squares(x = 0, y = 0):
     
 #移動可能マス指定関数
 
-#def Check_Squares(board, Click_Square):
+def Check_Squares(boards, Click_Squares):
+    if(boards[Click_Squares] == My_red)or(boards[Click_Squares] == My_blue):
+        U = (Click_Squares - 6)
+        D = (Click_Squares + 6)
+        L = (Click_Squares - 1)
+        R = (Click_Squares + 1)
+        if U < 0:
+            U = 0
+        elif (boards[U] == My_blue) or (boards[U] == My_red) :
+            U = 0
+            
+        if D > 35:
+            D = 0
+            
+        elif (boards[D] == My_blue) or (boards[D] == My_red):
+            D = 0
 
+        if L < 0:
+            L = 0
+        elif (boards[L] == My_blue) or (boards[L] == My_red) or (L % 6 == 5):
+            L = 0
+        if R > 35:
+            R = 0
+        elif (boards[R] == My_blue) or (boards[R] == My_red) or (R % 6 == 0):
+            R = 0
+
+    else:
+        U,D,L,R = 0,0,0,0 
+    if (U ==0)and(D == 0)and(L == 0)and(R == 0):
+        Move_flag = 0
+        Move_Click_flag = 0
+    else:
+        Move_flag = 1
+        Move_Click_flag = 0  
+ #       Move_Click_flag = 1  デバッグ用にコメントアウトしております 移動関数を作るときはひとつ上の行を消去し、コメントアウトを外してください
+        
+    Move_Squares = [U,D,L,R]    
+    Click_flag = 0
+    
+    return Click_flag , Move_Squares, Move_flag ,Move_Click_flag
+        
     
 #勝利条件判定関数
 
@@ -147,8 +189,10 @@ while True:
 
     hello2 = sysfont.render(str(x) , False, (0,0,0))
     hello3 = sysfont.render(str(y) , False, (0,0,0))
+    hello4 = sysfont.render(str(Move_Squares) , False, (0,0,0))    
     screen.blit(hello2, (10,100))
     screen.blit(hello3, (10,150))
+    screen.blit(hello4, (800,150))  
 
     #ここまで
 
@@ -160,7 +204,10 @@ while True:
             
     #これ以降がゲームのメインループ
     #定義してない部分はコメントアウトしてあります
-#    else:
+    else:
+        if (Move_Click_flag == False) and (-1 < Click_Square < 36):
+            Click_flag , Move_Squares , Move_flag , Move_Click_flag = Check_Squares(board, Click_Square)
+#        else
 #        Move_Piece(Click_Square, board)
 
 #        Win_Check(Enemy_red_Count, Enemy_blue_Count)
