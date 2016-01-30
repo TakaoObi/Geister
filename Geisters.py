@@ -192,8 +192,12 @@ while True:
     hello4 = sysfont.render(str(Move_Squares) , False, (0,0,0))    
     screen.blit(hello2, (10,100))
     screen.blit(hello3, (10,150))
+<<<<<<< HEAD
     screen.blit(hello4, (800,150))
 
+=======
+    screen.blit(hello4, (800,150))  
+>>>>>>> 598a392657a9914b1438434b2e7ab278ff4bdf57
 
     #ここまで
 
