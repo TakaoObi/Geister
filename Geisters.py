@@ -20,10 +20,6 @@ enemyblueImg = pygame.image.load("otherblue.png").convert()
 #ボードのマス
 board = [0] * 36
 
-#ターンのカウント(被ってました、消します)
-#Turn_Count = 0
-
-
 #クリックされたマス
 Click_Square = 0
 
@@ -73,35 +69,46 @@ sysfont = pygame.font.SysFont(None, 80)
 #コマ選択or移動先選択のクリック識別
 Move_Click_flag = False
 
+#ターン変更表示用変数
+Turn_Change = 1
+
+#ターン変更時文字表示
+startfont = pygame.font.SysFont(None, 150)
+One_Start = startfont.render("1P Start" , False, (0,0,255))
+Two_Start = startfont.render("2P Start" , False, (255,0,0))
+
+
 #以下デバッグ用
 #あれば付け足してください
 
 
 
-#駒設置関数
+#駒設置関数、駒配置後一回クリックしてください
 def Set_Pieces(boards = [0]*36, Click_Squares = 0, Counter = 0, Game_turn = 0):
 
     if Game_turn == 0 or Game_turn == 1:
+
+        if Counter == 8:
+                Counter = 0
+                Game_turn += 1
+                Click_flag = 0
+
         
-        if Counter < 4 and (24 < Click_Squares <29 or 30< Click_Squares <35)\
+        elif Counter < 4 and (24 < Click_Squares <29 or 30< Click_Squares <35)\
            and boards[Click_Squares] == 0:
             
                 boards[Click_Squares] = My_red
                 Click_flag = 0
                 Counter += 1
 
-        elif (24 < Click_Squares <29 or 30< Click_Squares <35)\
+        elif Counter < 8 and (24 < Click_Squares <29 or 30< Click_Squares <35)\
              and boards[Click_Squares] == 0:
                 boards[Click_Squares] = My_blue
                 Click_flag = 0
                 Counter += 1
-                if Counter == 8:
-                    Counter = 0
-                    Game_turn += 1                  
+                          
         else:
              Click_flag = 0
-
-
        
 
     return Counter, Click_flag, Game_turn
@@ -109,11 +116,13 @@ def Set_Pieces(boards = [0]*36, Click_Squares = 0, Counter = 0, Game_turn = 0):
 
 #クリックしたマスを返す関数
 #クリックと共にClick_Squareにマスの数字が入ります
-def Click_Squares(x = 0, y = 0):
-    if(x < 700 and y < 700):
+def Click_Squares(x = 0, y = 0, Click_Square = 0):
+    if(100 < x < 700 and 100 < y < 700):
         Click_Square = int (((x - 100) // 100) + 6 * ((y - 100) // 100))
 
     return Click_Square
+
+    
         
 #以下、作成していない部分はコメントアウト
 
@@ -194,23 +203,29 @@ while True:
     screen.blit(hello3, (10,150))
     screen.blit(hello4, (800,150))
 
+
     #ここまで
 
-    #駒設置部分
-    if Game_turn < 2:
-        if Click_flag == 1:
-            Counter, Click_flag, Game_turn = \
-                     Set_Pieces(board, Click_Square, Counter, Game_turn)
-            
-    #これ以降がゲームのメインループ
-    #定義してない部分はコメントアウトしてあります
-    else:
-        if (Move_Click_flag == False) and (-1 < Click_Square < 36):
-            Click_flag , Move_Squares , Move_flag , Move_Click_flag = Check_Squares(board, Click_Square)
-#        else
-#        Move_Piece(Click_Square, board)
+    #ターン表示のためにif文を追加しました
+    if Turn_Change == 0:
 
-#        Win_Check(Enemy_red_Count, Enemy_blue_Count)
+        #駒設置部分
+        if Game_turn < 2:
+            if Click_flag == 1:
+                Counter, Click_flag, Game_turn = \
+                         Set_Pieces(board, Click_Square, Counter, Game_turn)
+            
+        #これ以降がゲームのメインループ
+        #定義してない部分はコメントアウトしてあります
+        else:
+            if (Move_Click_flag == False) and (-1 < Click_Square < 36):
+                Click_flag , Move_Squares , Move_flag , Move_Click_flag = Check_Squares(board, Click_Square)
+    #        else
+    #        Move_Piece(Click_Square, board)
+
+    #        Win_Check(Enemy_red_Count, Enemy_blue_Count)
+
+
 
 
     #ターンごとのMy,Otherの切り替え,ボードも切りかえ
@@ -226,8 +241,9 @@ while True:
         Enemy_blue = 4
 
     if(Back_Game_turn != Game_turn):
-            for i in range(18):
-                board[i], board[35-i] = board[35-i], board[i] 
+        Turn_Change = 1
+        for i in range(18):
+            board[i], board[35-i] = board[35-i], board[i] 
 
     Back_Game_turn = Game_turn
 
@@ -235,40 +251,56 @@ while True:
     #これ以降画像表示
 
     #ボードの画像表示
-    screen.blit(boardImg, (100,100))
+    #ターン表示のためif文を追加しました
+    if Turn_Change == 0:
+    
+        screen.blit(boardImg, (100,100))
         
-    #光るマスの表示
-    if Move_flag == 1:
-        for i in range(4):
-            if Move_Squares[i] != 0:
-                pygame.draw.rect(screen, (255,255,0), \
-                                 Rect(100 + Move_Squares[i] % 6 * 100, \
-                                      100 + Move_Squares[i] // 6 * 100, \
-                                      100, 100))
+        #光るマスの表示
+        if Move_flag == 1:
+            for i in range(4):
+                if Move_Squares[i] != 0:
+                    pygame.draw.rect(screen, (255,255,0), \
+                                     Rect(100 + Move_Squares[i] % 6 * 100, \
+                                          100 + Move_Squares[i] // 6 * 100, \
+                                          100, 100))
 
 
                 
-    #ボード上の駒の表示
-    for i in range(36):
-        if board[i] == 1:
-            screen.blit(myredImg, (100 + i%6*100, 100 + i//6*100))
-        elif board[i] == 2:
-            screen.blit(myblueImg, (100 + i%6*100, 100 + i//6*100))
-        elif board[i] == 3:
-            screen.blit(enemyredImg, (100 + i%6*100, 100 + i//6*100))
-        elif board[i] == 4:
-            screen.blit(enemyblueImg, (100 + i%6*100, 100 + i//6*100))
+        #ボード上の駒の表示
+        for i in range(36):
+            if board[i] == 1:
+                screen.blit(myredImg, (100 + i%6*100, 100 + i//6*100))
+            elif board[i] == 2:
+                screen.blit(myblueImg, (100 + i%6*100, 100 + i//6*100))
+            elif board[i] == 3:
+                screen.blit(enemyredImg, (100 + i%6*100, 100 + i//6*100))
+            elif board[i] == 4:
+                screen.blit(enemyblueImg, (100 + i%6*100, 100 + i//6*100))
 
-    #取った駒の表示
-    for i in range(My_red_Count):
-        screen.blit(myredImg, (750 + i*100, 200))
-    for i in range(My_blue_Count):
-        screen.blit(myredImg, (750 + i*100, 300))
-    for i in range(Enemy_red_Count):
-        screen.blit(myredImg, (750 + i*100, 500))
-    for i in range(Enemy_blue_Count):
-        screen.blit(myredImg, (750 + i*100, 600))
+        #取った駒の表示
+        for i in range(My_red_Count):
+            screen.blit(myredImg, (750 + i*100, 200))
+        for i in range(My_blue_Count):
+            screen.blit(myredImg, (750 + i*100, 300))
+        for i in range(Enemy_red_Count):
+            screen.blit(myredImg, (750 + i*100, 500))
+        for i in range(Enemy_blue_Count):
+            screen.blit(myredImg, (750 + i*100, 600))
 
+    #ターン表示
+    else:
+        
+        if Game_turn % 2 == 1:
+            screen.blit(Two_Start, (100,300))
+        else:
+            screen.blit(One_Start, (100,300))
+
+        if Click_flag == 1:
+            Turn_Change = 0;
+            Click_flag = 0;
+        
+    
 
     #画面の更新
     pygame.display.update()
@@ -278,10 +310,10 @@ while True:
     for event in pygame.event.get():
         if event.type == QUIT:
             sys.exit()
-
+            
         
         if event.type == MOUSEBUTTONDOWN and event.button == 1:
             Click_flag = 1
             x, y = pygame.mouse.get_pos()
-            Click_Square = Click_Squares(int(x), int(y))
+            Click_Square = Click_Squares(int(x), int(y), Click_Square)
             
