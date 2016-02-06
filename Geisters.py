@@ -210,8 +210,28 @@ def Check_Squares(boards, Click_Squares):
     
 #勝利条件判定関数
 
-#def Win_Check(Enemy_red_Count, Enemy_blue_Count):
-    
+def Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag):
+#    global Win_flag 
+    if (Enemy_red_Count == 4):
+        Win_flag = 1
+        return Win_flag
+
+    elif (Enemy_blue_Count == 4):
+        Win_flag = 2
+        return Win_flag
+
+    else:
+        Win_flag = 0
+        return Win_flag
+
+def Twice_Win_Check(board, Win_flag):
+    if  (board[0] == 2)or(board[5] ==2):
+#        global Win_flag
+        Win_flag = 2
+        return Win_flag
+
+    else:
+        return Win_flag  
 
 
 #これ以降がループ部分
@@ -250,6 +270,8 @@ while True:
         #これ以降がゲームのメインループ
         #定義してない部分はコメントアウトしてあります
         else:
+            Win_flag = Twice_Win_Check(board, Win_flag)
+            
             if (Move_Click_flag == False) and (-1 < Click_Square < 36 ):
                 Click_flag , Move_Squares , Move_flag , Move_Click_flag , My_Click_Piece =\
                            Check_Squares(board, Click_Square)
@@ -257,7 +279,7 @@ while True:
                 Game_turn , Move_flag , Move_Click_flag, Click_Square,Enemy_red_Count, Enemy_blue_Count = \
                           Move_Piece(Click_Square,board,My_Click_Piece,Move_Squares,Game_turn,Enemy_red_Count, Enemy_blue_Count)
 
-    #        Win_Check(Enemy_red_Count, Enemy_blue_Count)
+            Win_flag = Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag)
 
 
 
