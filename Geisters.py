@@ -76,6 +76,8 @@ Turn_Change = 1
 startfont = pygame.font.SysFont(None, 150)
 One_Start = startfont.render("1P Start" , False, (0,0,255))
 Two_Start = startfont.render("2P Start" , False, (255,0,0))
+One_Win = startfont.render("1P Win" , False, (0,0,255))
+Two_Win = startfont.render("2P Win" , False, (0,0,255))
 
 
 #以下デバッグ用
@@ -209,24 +211,27 @@ def Check_Squares(boards, Click_Squares):
         
     
 #勝利条件判定関数
+#勝利条件（駒）
+def Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag, Game_turn):
 
-def Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag):
-#    global Win_flag 
     if (Enemy_red_Count == 4):
         Win_flag = 1
-        return Win_flag
+        Game_turn -= 1
+        return Win_flag, Game_turn
 
     elif (Enemy_blue_Count == 4):
         Win_flag = 2
-        return Win_flag
+        Game_turn -= 1
+        return Win_flag, Game_turn
 
     else:
         Win_flag = 0
-        return Win_flag
+        return Win_flag, Game_turn
 
+#勝利条件（脱出）
 def Twice_Win_Check(board, Win_flag):
-    if  (board[0] == 2)or(board[5] ==2):
-#        global Win_flag
+    
+    if  (board[0] == My_blue)or(board[5] == My_blue):
         Win_flag = 2
         return Win_flag
 
@@ -271,16 +276,18 @@ while True:
         #定義してない部分はコメントアウトしてあります
         else:
             Win_flag = Twice_Win_Check(board, Win_flag)
+
+            if Win_flag == 0:
             
-            if (Move_Click_flag == False) and (-1 < Click_Square < 36 ):
-                Click_flag , Move_Squares , Move_flag , Move_Click_flag , My_Click_Piece =\
-                           Check_Squares(board, Click_Square)
-            else:
-                Game_turn , Move_flag , Move_Click_flag, Click_Square,Enemy_red_Count, Enemy_blue_Count = \
-                          Move_Piece(Click_Square,board,My_Click_Piece,Move_Squares,Game_turn,Enemy_red_Count, Enemy_blue_Count)
-
-            Win_flag = Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag)
-
+                if (Move_Click_flag == False) and (-1 < Click_Square < 36 ):
+                    Click_flag , Move_Squares , Move_flag , Move_Click_flag , My_Click_Piece =\
+                               Check_Squares(board, Click_Square)
+                else:
+                    Game_turn , Move_flag , Move_Click_flag, Click_Square,Enemy_red_Count, Enemy_blue_Count = \
+                              Move_Piece(Click_Square,board,My_Click_Piece,Move_Squares,Game_turn,Enemy_red_Count, Enemy_blue_Count)
+    
+                Win_flag, Game_turn = Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag, Game_turn)
+    
 
 
 
@@ -289,7 +296,8 @@ while True:
         My_red = 3
         My_blue = 4
         Enemy_red = 1
-        Enemy_blue = 2          
+        Enemy_blue = 2
+        
     else:
         My_red = 1
         My_blue = 2
@@ -299,7 +307,9 @@ while True:
     if(Back_Game_turn != Game_turn):
         Turn_Change = 1
         for i in range(18):
-            board[i], board[35-i] = board[35-i], board[i] 
+            board[i], board[35-i] = board[35-i], board[i]
+        My_red_Count, Enemy_red_Count = Enemy_red_Count, My_red_Count
+        My_blue_Count, Enemy_blue_Count = Enemy_blue_Count, My_blue_Count
 
     Back_Game_turn = Game_turn
 
@@ -308,7 +318,7 @@ while True:
 
     #ボードの画像表示
     #ターン表示のためif文を追加しました
-    if Turn_Change == 0:
+    if Turn_Change == 0 and Win_flag == 0:
     
         screen.blit(boardImg, (100,100))
 
@@ -335,26 +345,51 @@ while True:
                                           100, 100), 5)
 
         #取った駒の表示
-        for i in range(My_red_Count):
-            screen.blit(myredImg, (750 + i*100, 200))
-        for i in range(My_blue_Count):
-            screen.blit(myblueImg, (750 + i*100, 300))
-        for i in range(Enemy_red_Count):
-            screen.blit(enemyredImg, (750 + i*100, 500))
-        for i in range(Enemy_blue_Count):
-            screen.blit(enemyblueImg, (750 + i*100, 600))
-
-    #ターン表示
-    else:
-        
-        if Game_turn % 2 == 1:
-            screen.blit(Two_Start, (100,300))
+        if(Game_turn % 2 == 1):
+            for i in range(My_red_Count):
+                screen.blit(myredImg, (750 + i*100, 200))
+            for i in range(My_blue_Count):
+                screen.blit(myblueImg, (750 + i*100, 300))
+            for i in range(Enemy_red_Count):
+                screen.blit(enemyredImg, (750 + i*100, 500))
+            for i in range(Enemy_blue_Count):
+                screen.blit(enemyblueImg, (750 + i*100, 600))
         else:
-            screen.blit(One_Start, (100,300))
+            for i in range(My_red_Count):
+                screen.blit(enemyredImg, (750 + i*100, 200))
+            for i in range(My_blue_Count):
+                screen.blit(enemyblueImg, (750 + i*100, 300))
+            for i in range(Enemy_red_Count):
+                screen.blit(myredImg, (750 + i*100, 500))
+            for i in range(Enemy_blue_Count):
+                screen.blit(myblueImg, (750 + i*100, 600))
+            
 
-        if Click_flag == 1:
-            Turn_Change = 0;
-            Click_flag = 0;
+    #ターン表示 勝利表示
+    else:
+
+        if Win_flag != 0:
+            if Game_turn % 2 == 1:
+                if Win_flag == 2:
+                    screen.blit(Two_Win, (100,300))
+                else:
+                    screen.blit(One_Win, (100,300))
+            else:
+                if Win_flag == 2:
+                    screen.blit(One_Win, (100,300))
+                else:
+                    screen.blit(Two_Win, (100,300))
+
+        else:
+            if Game_turn % 2 == 1:
+                screen.blit(Two_Start, (100,300))
+            else:
+                screen.blit(One_Start, (100,300))
+
+            if Click_flag == 1:
+                Turn_Change = 0;
+                Click_flag = 0;
+                    
         
     
 
