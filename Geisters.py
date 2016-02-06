@@ -129,7 +129,38 @@ def Click_Squares(x = 0, y = 0, Click_Square = 0):
 
 #駒移動用関数
 
-#def Move_Piece(Click_Square, board):
+def Move_Piece(Click_Square,boards,My_Click_Piece,Move_Squares,game_turn,Enemy_red_Count,Enemy_blue_Count):
+
+
+    
+    if(Click_Square in Move_Squares):
+        
+        if boards[Click_Square] == Enemy_red :
+            Enemy_red_Count += 1
+                
+        elif boards[Click_Square] == Enemy_blue :
+            Enemy_blue_Count += 1
+                
+        boards[Click_Square] = boards[My_Click_Piece]
+        boards[My_Click_Piece]=0
+        Move_flag =0
+        Move_Click_flag=0
+        Move_Squares=[None,None,None,None]
+        Click_Square = 36
+        game_turn += 1
+        
+    elif(Click_Square != My_Click_Piece):
+        
+        
+        Move_Click_flag = 0
+        Move_flag = 0
+    else :
+        Move_flag =1
+        Move_Click_flag =1
+
+    Click_flag = 0
+        
+    return game_turn , Move_flag , Move_Click_flag , Click_Square , Enemy_red_Count, Enemy_blue_Count
 
     
 #移動可能マス指定関数
@@ -141,39 +172,40 @@ def Check_Squares(boards, Click_Squares):
         L = (Click_Squares - 1)
         R = (Click_Squares + 1)
         if U < 0:
-            U = 0
+            U = None
         elif (boards[U] == My_blue) or (boards[U] == My_red) :
-            U = 0
+            U = None
             
         if D > 35:
-            D = 0
+            D = None
             
         elif (boards[D] == My_blue) or (boards[D] == My_red):
-            D = 0
+            D = None
 
         if L < 0:
-            L = 0
+            L = None
         elif (boards[L] == My_blue) or (boards[L] == My_red) or (L % 6 == 5):
-            L = 0
+            L = None
         if R > 35:
-            R = 0
+            R = None
         elif (boards[R] == My_blue) or (boards[R] == My_red) or (R % 6 == 0):
-            R = 0
+            R = None
 
     else:
-        U,D,L,R = 0,0,0,0 
-    if (U ==0)and(D == 0)and(L == 0)and(R == 0):
+        U,D,L,R = None,None,None,None 
+    if (U == None)and(D == None)and(L == None)and(R == None):
         Move_flag = 0
         Move_Click_flag = 0
+        My_Click_Piece = 0
     else:
-        Move_flag = 1
-        Move_Click_flag = 0  
- #       Move_Click_flag = 1  デバッグ用にコメントアウトしております 移動関数を作るときはひとつ上の行を消去し、コメントアウトを外してください
+        Move_flag = 1  
+        Move_Click_flag = 1
+        My_Click_Piece = Click_Squares 
         
     Move_Squares = [U,D,L,R]    
     Click_flag = 0
     
-    return Click_flag , Move_Squares, Move_flag ,Move_Click_flag
+    return Click_flag , Move_Squares, Move_flag ,Move_Click_flag , My_Click_Piece
         
     
 #勝利条件判定関数
@@ -218,10 +250,12 @@ while True:
         #これ以降がゲームのメインループ
         #定義してない部分はコメントアウトしてあります
         else:
-            if (Move_Click_flag == False) and (-1 < Click_Square < 36):
-                Click_flag , Move_Squares , Move_flag , Move_Click_flag = Check_Squares(board, Click_Square)
-    #        else
-    #        Move_Piece(Click_Square, board)
+            if (Move_Click_flag == False) and (-1 < Click_Square < 36 ):
+                Click_flag , Move_Squares , Move_flag , Move_Click_flag , My_Click_Piece =\
+                           Check_Squares(board, Click_Square)
+            else:
+                Game_turn , Move_flag , Move_Click_flag, Click_Square,Enemy_red_Count, Enemy_blue_Count = \
+                          Move_Piece(Click_Square,board,My_Click_Piece,Move_Squares,Game_turn,Enemy_red_Count, Enemy_blue_Count)
 
     #        Win_Check(Enemy_red_Count, Enemy_blue_Count)
 
@@ -255,16 +289,6 @@ while True:
     if Turn_Change == 0:
     
         screen.blit(boardImg, (100,100))
-        
-        #光るマスの表示
-        if Move_flag == 1:
-            for i in range(4):
-                if Move_Squares[i] != 0:
-                    pygame.draw.rect(screen, (255,255,0), \
-                                     Rect(100 + Move_Squares[i] % 6 * 100, \
-                                          100 + Move_Squares[i] // 6 * 100, \
-                                          100, 100))
-
 
                 
         #ボード上の駒の表示
@@ -278,15 +302,25 @@ while True:
             elif board[i] == 4:
                 screen.blit(enemyblueImg, (100 + i%6*100, 100 + i//6*100))
 
+
+        #光るマスの表示
+        if Move_flag == 1:
+            for i in range(4):
+                if Move_Squares[i] is not None:
+                    pygame.draw.rect(screen, (255,255,0), \
+                                     Rect(100 + Move_Squares[i] % 6 * 100, \
+                                          100 + Move_Squares[i] // 6 * 100, \
+                                          100, 100), 5)
+
         #取った駒の表示
         for i in range(My_red_Count):
             screen.blit(myredImg, (750 + i*100, 200))
         for i in range(My_blue_Count):
-            screen.blit(myredImg, (750 + i*100, 300))
+            screen.blit(myblueImg, (750 + i*100, 300))
         for i in range(Enemy_red_Count):
-            screen.blit(myredImg, (750 + i*100, 500))
+            screen.blit(enemyredImg, (750 + i*100, 500))
         for i in range(Enemy_blue_Count):
-            screen.blit(myredImg, (750 + i*100, 600))
+            screen.blit(enemyblueImg, (750 + i*100, 600))
 
     #ターン表示
     else:
