@@ -77,7 +77,9 @@ startfont = pygame.font.SysFont(None, 150)
 One_Start = startfont.render("1P Start" , False, (0,0,255))
 Two_Start = startfont.render("2P Start" , False, (255,0,0))
 One_Win = startfont.render("1P Win" , False, (0,0,255))
-Two_Win = startfont.render("2P Win" , False, (0,0,255))
+Two_Win = startfont.render("2P Win" , False, (255,0,0))
+One_Player = startfont.render("1P" , False, (0,0,255))
+Two_Player = startfont.render("2P" , False, (255,0,0))
 
 
 #以下デバッグ用
@@ -131,10 +133,9 @@ def Click_Squares(x = 0, y = 0, Click_Square = 0):
 
 #駒移動用関数
 
-def Move_Piece(Click_Square,boards,My_Click_Piece,Move_Squares,game_turn,Enemy_red_Count,Enemy_blue_Count):
-
-
-    
+def Move_Piece(Click_Square, boards, My_Click_Piece, Move_Squares, game_turn,\
+               Enemy_red_Count, Enemy_blue_Count, Click_flag):
+   
     if(Click_Square in Move_Squares):
         
         if boards[Click_Square] == Enemy_red :
@@ -162,7 +163,8 @@ def Move_Piece(Click_Square,boards,My_Click_Piece,Move_Squares,game_turn,Enemy_r
 
     Click_flag = 0
         
-    return game_turn , Move_flag , Move_Click_flag , Click_Square , Enemy_red_Count, Enemy_blue_Count
+    return game_turn , Move_flag , Move_Click_flag , Click_Square ,\
+           Enemy_red_Count, Enemy_blue_Count, Click_flag
 
     
 #移動可能マス指定関数
@@ -207,7 +209,8 @@ def Check_Squares(boards, Click_Squares):
     Move_Squares = [U,D,L,R]    
     Click_flag = 0
     
-    return Click_flag , Move_Squares, Move_flag ,Move_Click_flag , My_Click_Piece
+    return Click_flag , Move_Squares, Move_flag ,Move_Click_flag ,\
+           My_Click_Piece
         
     
 #勝利条件判定関数
@@ -273,20 +276,26 @@ while True:
                          Set_Pieces(board, Click_Square, Counter, Game_turn)
             
         #これ以降がゲームのメインループ
-        #定義してない部分はコメントアウトしてあります
         else:
             Win_flag = Twice_Win_Check(board, Win_flag)
 
             if Win_flag == 0:
             
                 if (Move_Click_flag == False) and (-1 < Click_Square < 36 ):
-                    Click_flag , Move_Squares , Move_flag , Move_Click_flag , My_Click_Piece =\
+                    Click_flag, Move_Squares, Move_flag,\
+                    Move_Click_flag, My_Click_Piece =\
                                Check_Squares(board, Click_Square)
                 else:
-                    Game_turn , Move_flag , Move_Click_flag, Click_Square,Enemy_red_Count, Enemy_blue_Count = \
-                              Move_Piece(Click_Square,board,My_Click_Piece,Move_Squares,Game_turn,Enemy_red_Count, Enemy_blue_Count)
+                    Game_turn , Move_flag , Move_Click_flag, Click_Square,\
+                              Enemy_red_Count, Enemy_blue_Count, Click_flag = \
+                              Move_Piece(Click_Square, board, My_Click_Piece,\
+                                         Move_Squares, Game_turn,\
+                                         Enemy_red_Count, Enemy_blue_Count,
+                                         Click_flag)
     
-                Win_flag, Game_turn = Win_Check(Enemy_red_Count, Enemy_blue_Count, Win_flag, Game_turn)
+                Win_flag, Game_turn = Win_Check(Enemy_red_Count, \
+                                                Enemy_blue_Count, \
+                                                Win_flag, Game_turn)
     
 
 
@@ -297,12 +306,14 @@ while True:
         My_blue = 4
         Enemy_red = 1
         Enemy_blue = 2
+        screen.blit(Two_Player, (800,50))
         
     else:
         My_red = 1
         My_blue = 2
         Enemy_red = 3
         Enemy_blue = 4
+        screen.blit(One_Player, (800,50))
 
     if(Back_Game_turn != Game_turn):
         Turn_Change = 1
