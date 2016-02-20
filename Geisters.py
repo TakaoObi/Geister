@@ -395,7 +395,7 @@ while True:
                                           100, 100), 5)
 
         #取った駒の表示
-        if(GameTurn % 2 == 1):
+        if(GameTurn % 2 == 0):
             
             for i in range(MyRedCount):
                 screen.blit(myredImg, (750 + i*100, 200))
