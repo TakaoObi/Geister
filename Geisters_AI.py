@@ -153,7 +153,7 @@ def Click_Squares(x = 0, y = 0, ClickSquare = 0):
 #駒移動用関数
 def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
                MoveSquares = [0] * 4, GameTurn = 0,\
-               EnemyRedCount = 0, EnemyBlueCount = 0,\
+               MyRedCount = 0, MyBlueCount = 0,\
                MyRedPosition = [0]*4, MyBluePosition = [0]*4,\
                AiRedPosition = [0]*4, AiBluePosition = [0]*4,\
                ClickFlag = 0, Counter = 0):
@@ -166,7 +166,7 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
         MoveClickFlag = False
 
         return GameTurn, MoveFlag, MoveClickFlag, ClickSquare,\
-               EnemyRedCount, EnemyBlueCount,\
+               MyRedCount, MyBlueCount,\
                MyRedPosition, MyBluePosition, AiRedPosition, AiBluePosition,\
                ClickFlag, Counter
     
@@ -175,14 +175,14 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
         
         if Board[ClickSquare] == 3 :
             
-            EnemyRedCount += 1
+            MyRedCount += 1
             for i in range(4):
                 if(AiRedPosition[i] == 35 - ClickSquare):
                     AiRedPosition[i] = None
                 
         elif Board[ClickSquare] == 4 :
             
-            EnemyBlueCount += 1
+            MyBlueCount += 1
             for i in range(4):
                 if(AiBluePosition[i] == 35 - ClickSquare):
                     AiBluePosition[i] = None
@@ -216,7 +216,7 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
     ClickFlag = 0
         
     return GameTurn, MoveFlag, MoveClickFlag, ClickSquare,\
-           EnemyRedCount, EnemyBlueCount,\
+           MyRedCount, MyBlueCount,\
            MyRedPosition, MyBluePosition, AiRedPosition, AiBluePosition,\
            ClickFlag, Counter
            
@@ -297,14 +297,14 @@ def Check_Squares(Board = [0] * 36, ClickSquare = 0):
 def Win_Check(EnemyRedCount = 0, EnemyBlueCount = 0,\
               WinFlag = 0, GameTurn = 0):
 
-    if (EnemyRedCount == 4):
+    if (EnemyRedCount == 4 or MyBlueCount == 4):
         
         WinFlag = 1
         GameTurn -= 1
         return WinFlag, GameTurn
     
 
-    elif (EnemyBlueCount == 4):
+    elif (EnemyBlueCount == 4 or MyRedCount == 4):
         
         WinFlag = 2
         GameTurn -= 1
@@ -318,14 +318,36 @@ def Win_Check(EnemyRedCount = 0, EnemyBlueCount = 0,\
 
     
 #勝利条件（脱出）
-def Twice_Win_Check(Board = [0] * 36, WinFlag = 0):
+def Twice_Win_Check(Board = [0] * 36, WinFlag = 0, GameTurn = 0):
     
-    if (Board[0] == MyBlue) or (Board[5] == MyBlue):
+    if ((Board[0] == 2 or Board[5] == 2) and GameTurn % 2 == 0):
 
-        WinFlag = 2
-        return WinFlag
+        if(WinFlag == 3):
+            
+            WinFlag = 1
+            return WinFlag
+        
+        else:
+            
+            WinFlag = 3
+            return WinFlag
+            
+
+    elif((Board[0] == 4 or Board[5] == 4) and GameTurn % 2 == 1):
+
+        if(WinFlag == 4):
+            
+            WinFlag = 2
+            return WinFlag
+        
+        else:
+            
+            WinFlag = 4
+            return WinFlag
 
     else:
+        
+        WinFlag = 0    
         return WinFlag
 
 
@@ -467,17 +489,25 @@ def AI_Normal_Move(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4
         
             #周囲の敵を食べる
             if(AiRedPosition[i] > 5):
-                if((Board[AiRedPosition[i] - 6] == 1 and EnemyRedCount != 1) or Board[AiRedPosition[i] - 6] == 2):
-                    AroundExpectation[0] += 5
+                if(Board[AiRedPosition[i] - 6] == 1):
+                    AroundExpectation[0] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiRedPosition[i] - 6] == 2):
+                    AroundExpectation[0] += 6
             if(AiRedPosition[i] % 6 != 0):
-                if((Board[AiRedPosition[i] - 1] == 1 and EnemyRedCount != 1) or Board[AiRedPosition[i] - 1] == 2):
-                    AroundExpectation[1] += 5
+                if(Board[AiRedPosition[i] - 1] == 1):
+                    AroundExpectation[1] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiRedPosition[i] - 1] == 2):
+                    AroundExpectation[1] += 6
             if(AiRedPosition[i] % 6 != 5):
-                if((Board[AiRedPosition[i] + 1] == 1 and EnemyRedCount != 1) or Board[AiRedPosition[i] + 1] == 2):
-                    AroundExpectation[0] += 5
+                if(Board[AiRedPosition[i] + 1] == 1 ):
+                    AroundExpectation[2] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiRedPosition[i] + 1] == 2):
+                    AroundExpectation[2] += 6
             if(AiRedPosition[i] < 30):
-                if((Board[AiRedPosition[i] + 6] == 1 and EnemyRedCount != 1) or Board[AiRedPosition[i] + 6] == 2):
-                    AroundExpectation[0] += 5
+                if(Board[AiRedPosition[i] + 6] == 1):
+                    AroundExpectation[3] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiRedPosition[i] + 6] == 2):
+                    AroundExpectation[3] += 6
 
             #周囲の敵に食べられる
             if(AiRedPosition[i] > 11):
@@ -572,49 +602,57 @@ def AI_Normal_Move(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4
         
             #周囲の敵を食べる
             if(AiBluePosition[i] > 5):
-                if((Board[AiBluePosition[i] - 6] == 1 and EnemyBlueCount != 1) or Board[AiBluePosition[i] - 6] == 2):
-                    AroundExpectation[0] += 5
+                if(Board[AiBluePosition[i] - 6] == 1):
+                    AroundExpectation[0] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiBluePosition[i] - 6] == 2):
+                    AroundExpectation[0] += 6
             if(AiBluePosition[i] % 6 != 0):
-                if((Board[AiBluePosition[i] - 1] == 1 and EnemyBlueCount != 1) or Board[AiBluePosition[i] - 1] == 2):
-                    AroundExpectation[1] += 5
+                if(Board[AiBluePosition[i] - 1] == 1):
+                    AroundExpectation[1] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiBluePosition[i] - 1] == 2):
+                    AroundExpectation[1] += 6
             if(AiBluePosition[i] % 6 != 5):
-                if((Board[AiBluePosition[i] + 1] == 1 and EnemyBlueCount != 1) or Board[AiBluePosition[i] + 1] == 2):
-                    AroundExpectation[0] += 5
+                if(Board[AiBluePosition[i] + 1] == 1 ):
+                    AroundExpectation[2] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiBluePosition[i] + 1] == 2):
+                    AroundExpectation[2] += 6
             if(AiBluePosition[i] < 30):
-                if((Board[AiBluePosition[i] + 6] == 1 and EnemyBlueCount != 1) or Board[AiBluePosition[i] + 6] == 2):
-                    AroundExpectation[0] += 5
+                if(Board[AiBluePosition[i] + 6] == 1):
+                    AroundExpectation[3] += 3 * (2 - EnemyRedCount)
+                elif(Board[AiBluePosition[i] + 6] == 2):
+                    AroundExpectation[3] += 6
 
             #周囲の敵から逃げる
             if(AiBluePosition[i] > 11):
                 if(Board[AiBluePosition[i] - 12] == 1 or Board[AiBluePosition[i] - 12] == 2):
-                    AroundExpectation[0] -= 2
+                    AroundExpectation[3] += MyBlueCount * MyBlueCount
             if(AiBluePosition[i] % 6 > 2):
                 if(Board[AiBluePosition[i] - 2] == 1 or Board[AiBluePosition[i] - 2] == 2):
-                    AroundExpectation[1] -= 2
+                    AroundExpectation[2] += MyBlueCount * MyBlueCount
             if(AiBluePosition[i] % 6 < 4):
                 if(Board[AiBluePosition[i] + 2] == 1 or Board[AiBluePosition[i] + 2] == 2):
-                    AroundExpectation[2] -= 2
+                    AroundExpectation[1] += MyBlueCount3 * MyBlueCount
             if(AiBluePosition[i] < 24):
                 if(Board[AiBluePosition[i] + 12] == 1 or Board[AiBluePosition[i] + 12] == 2):
-                    AroundExpectation[3] -= 2
+                    AroundExpectation[0] += MyBlueCount * MyBlueCount
             if(AiBluePosition[i] > 5):
                 if(AiBluePosition[i] % 6 != 0):
                     if(Board[AiBluePosition[i] - 7] == 1 or Board[AiBluePosition[i] - 7] == 2):
-                        AroundExpectation[0] -= 2
-                        AroundExpectation[1] -= 2
+                        AroundExpectation[2] += MyBlueCount * MyBlueCount
+                        AroundExpectation[3] += MyBlueCount * MyBlueCount
                 if(AiBluePosition[i] % 6 != 5):
                     if(Board[AiBluePosition[i] - 5] == 1 or Board[AiBluePosition[i] - 5] == 2):
-                        AroundExpectation[0] -= 2
-                        AroundExpectation[2] -= 2
+                        AroundExpectation[1] += MyBlueCount * MyBlueCount
+                        AroundExpectation[3] += MyBlueCount * MyBlueCount
             if(AiBluePosition[i] < 30):
                 if(AiBluePosition[i] % 6 != 0):
                     if(Board[AiBluePosition[i] + 5] == 1 or Board[AiBluePosition[i] + 5] == 2):
-                        AroundExpectation[1] -= 2
-                        AroundExpectation[3] -= 2
+                        AroundExpectation[0] += MyBlueCount * MyBlueCount
+                        AroundExpectation[2] += MyBlueCount * MyBlueCount
                 if(AiBluePosition[i] % 6 != 5):
                     if(Board[AiBluePosition[i] + 7] == 1 or Board[AiBluePosition[i] + 7] == 2):
-                        AroundExpectation[2] -= 2
-                        AroundExpectation[3] -= 2
+                        AroundExpectation[0] += MyBlueCount * MyBlueCount
+                        AroundExpectation[1] += MyBlueCount * MyBlueCount
 
             #移動可能か
             if(AiBluePosition[i] > 5):
@@ -783,7 +821,7 @@ while True:
         #これ以降がゲームのメインループ
         else:
             
-            WinFlag = Twice_Win_Check(Board, WinFlag)
+            WinFlag = Twice_Win_Check(Board, WinFlag, GameTurn)
 
             if WinFlag == 0:
 
@@ -799,12 +837,12 @@ while True:
                     else:
                             
                         GameTurn , MoveFlag , MoveClickFlag, ClickSquare,\
-                        EnemyRedCount, EnemyBlueCount,\
+                        MyRedCount, MyBlueCount,\
                         MyRedPosition, MyBluePosition, AiRedPosition, AiBluePosition,\
                         ClickFlag, Counter= \
                                     Move_Piece(Board, ClickSquare, MyClickPiece,\
                                                MoveSquares, GameTurn,\
-                                               EnemyRedCount, EnemyBlueCount,\
+                                               MyRedCount, MyBlueCount,\
                                                MyRedPosition, MyBluePosition,\
                                                AiRedPosition, AiBluePosition,\
                                                ClickFlag, Counter)
@@ -836,8 +874,6 @@ while True:
             
         MyRed, EnemyRed = EnemyRed, MyRed
         MyBlue, EnemyBlue = EnemyBlue, MyBlue
-        MyRedCount, EnemyRedCount = EnemyRedCount, MyRedCount
-        MyBlueCount, EnemyBlueCount = EnemyBlueCount, MyBlueCount
         TurnChange = 1
         
 
@@ -891,55 +927,27 @@ while True:
                                           100, 100), 5)
 
         #取った駒の表示
-        if(GameTurn % 2 == 0):
-            
-            for i in range(MyRedCount):
-                screen.blit(myredImg, (750 + i*100, 200))
-                
-            for i in range(MyBlueCount):
-                screen.blit(myblueImg, (750 + i*100, 300))
-                
-            for i in range(EnemyRedCount):
-                screen.blit(enemyredImg, (750 + i*100, 500))
-                
-            for i in range(EnemyBlueCount):
-                screen.blit(enemyblueImg, (750 + i*100, 600))
-                
-        else:
-            
-            for i in range(MyRedCount):
-                screen.blit(enemyredImg, (750 + i*100, 200))
-                
-            for i in range(MyBlueCount):
-                screen.blit(enemyblueImg, (750 + i*100, 300))
-                
-            for i in range(EnemyRedCount):
-                screen.blit(myredImg, (750 + i*100, 500))
-                
-            for i in range(EnemyBlueCount):
-                screen.blit(myblueImg, (750 + i*100, 600))
-            
+        for i in range(MyRedCount):
+            screen.blit(enemyredImg, (750 + i*100, 200))               
+        for i in range(MyBlueCount):
+            screen.blit(enemyblueImg, (750 + i*100, 300))            
+        for i in range(EnemyRedCount):
+            screen.blit(myredImg, (750 + i*100, 500))              
+        for i in range(EnemyBlueCount):
+            screen.blit(myblueImg, (750 + i*100, 600))
+
 
     #ターン表示 勝利表示
     else:
 
-        if WinFlag != 0:
+        if WinFlag == 1 or WinFlag == 2:
             
-            if GameTurn % 2 == 1:
                 
-                if WinFlag == 2:
-                    screen.blit(TwoWin, (100,300))
-                    
-                else:
-                    screen.blit(OneWin, (100,300))
+            if WinFlag == 2:
+                screen.blit(TwoWin, (100,300))
                     
             else:
-                
-                if WinFlag == 2:
-                    screen.blit(OneWin, (100,300))
-                    
-                else:
-                    screen.blit(TwoWin, (100,300))
+                screen.blit(OneWin, (100,300))
 
         else:
             
