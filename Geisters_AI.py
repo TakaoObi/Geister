@@ -56,6 +56,8 @@ MoveFlag = 0
 
 #勝利条件用フラグ
 WinFlag = 0
+TwiceWinFlag = 0
+WinCount = 0
 
 #マウスのx,y座標
 x = 0
@@ -313,42 +315,43 @@ def Win_Check(EnemyRedCount = 0, EnemyBlueCount = 0,\
 
     else:
         
-        WinFlag = 0
         return WinFlag, GameTurn
 
     
 #勝利条件（脱出）
-def Twice_Win_Check(Board = [0] * 36, WinFlag = 0, GameTurn = 0):
+def Twice_Win_Check(Board = [0] * 36, WinFlag = 0, TwiceWinFlag = 0, GameTurn = 0, WinCount = 0, ClickFlag = 0):
     
-    if ((Board[0] == 2 or Board[5] == 2) and GameTurn % 2 == 0):
+    if ((Board[0] == 2 or Board[5] == 2) and GameTurn % 2 == 0 and WinCount == 0):
 
-        if(WinFlag == 3):
+
+        if(TwiceWinFlag == 1):
+
+            if(ClickFlag == 1):              
+                WinFlag = 1
             
-            WinFlag = 1
-            return WinFlag
+            return WinFlag, TwiceWinFlag, WinCount
         
         else:
             
-            WinFlag = 3
-            return WinFlag
+            TwiceWinFlag = 1
+            return WinFlag, TwiceWinFlag, WinCount
             
 
-    elif((Board[0] == 4 or Board[5] == 4) and GameTurn % 2 == 1):
+    elif((Board[0] == 4 or Board[5] == 4) and GameTurn % 2 == 1 and WinCount == 0):
 
-        if(WinFlag == 4):
+        if(TwiceWinFlag == 2):
             
             WinFlag = 2
-            return WinFlag
+            return WinFlag, TwiceWinFlag, WinCount
         
         else:
             
-            WinFlag = 4
-            return WinFlag
+            TwiceWinFlag = 2
+            return WinFlag, TwiceWinFlag, WinCount
 
-    else:
+    WinCount = 1
         
-        WinFlag = 0    
-        return WinFlag
+    return WinFlag, TwiceWinFlag, WinCount
 
 
 #以下ＡＩ用関数
@@ -821,9 +824,10 @@ while True:
         #これ以降がゲームのメインループ
         else:
             
-            WinFlag = Twice_Win_Check(Board, WinFlag, GameTurn)
 
             if WinFlag == 0:
+
+                WinFlag, TwiceWinFlag, WinCount = Twice_Win_Check(Board, WinFlag, TwiceWinFlag, GameTurn, WinCount, ClickFlag)
 
                 if GameTurn % 2 == 0:
             
@@ -858,8 +862,7 @@ while True:
                                           EnemyRedCount, EnemyBlueCount, \
                                           ClickFlag, Counter)
                             
-                    
-    
+                
                 WinFlag, GameTurn = Win_Check(EnemyRedCount,\
                                               EnemyBlueCount,\
                                               WinFlag, GameTurn)
@@ -875,6 +878,7 @@ while True:
         MyRed, EnemyRed = EnemyRed, MyRed
         MyBlue, EnemyBlue = EnemyBlue, MyBlue
         TurnChange = 1
+        WinCount = 0
         
 
     BackGameTurn = GameTurn
@@ -896,6 +900,13 @@ while True:
         screen.blit(AiPositions3, (800, 500))
         AiPositions4 = sysfont.render(str(MyBluePosition), False, (0,0,0))
         screen.blit(AiPositions4, (800, 600))
+
+        AiPositions5 = sysfont.render(str(TwiceWinFlag), False, (0,0,0))
+        screen.blit(AiPositions5, (800, 100))
+        AiPositions6 = sysfont.render(str(WinFlag), False, (0,0,0))
+        screen.blit(AiPositions6, (850, 100))
+        AiPositions7 = sysfont.render(str(GameTurn), False, (0,0,0))
+        screen.blit(AiPositions7, (800, 200))
         
                 
         #ボード上の駒の表示
@@ -927,14 +938,14 @@ while True:
                                           100, 100), 5)
 
         #取った駒の表示
-        for i in range(MyRedCount):
-            screen.blit(enemyredImg, (750 + i*100, 200))               
-        for i in range(MyBlueCount):
-            screen.blit(enemyblueImg, (750 + i*100, 300))            
-        for i in range(EnemyRedCount):
-            screen.blit(myredImg, (750 + i*100, 500))              
-        for i in range(EnemyBlueCount):
-            screen.blit(myblueImg, (750 + i*100, 600))
+#        for i in range(MyRedCount):
+#            screen.blit(enemyredImg, (750 + i*100, 200))               
+ #       for i in range(MyBlueCount):
+  #          screen.blit(enemyblueImg, (750 + i*100, 300))            
+   #     for i in range(EnemyRedCount):
+    #        screen.blit(myredImg, (750 + i*100, 500))              
+     #   for i in range(EnemyBlueCount):
+      #      screen.blit(myblueImg, (750 + i*100, 600))
 
 
     #ターン表示 勝利表示
