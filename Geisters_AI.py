@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 import sys
 import random
+import time
 
 #スクリーンサイズ指定 
 SCREEN_SIZE = (1200, 800)
@@ -17,6 +18,8 @@ myredImg = pygame.image.load("myred.png").convert()
 myblueImg = pygame.image.load("myblue.png").convert()
 enemyredImg = pygame.image.load("otherred.png").convert()
 enemyblueImg = pygame.image.load("otherblue.png").convert()
+mypieceImg = pygame.image.load("mypiece.png").convert()
+enemypieceImg = pygame.image.load("otherpiece.png").convert()
 
 #ボードのマス
 Board = [0] * 36
@@ -96,11 +99,14 @@ MyRedPosition = [0] * 4
 AiBluePosition = [0] * 4
 AiRedPosition = [0] * 4
 
+#相手の手予測用
+MyPosition = [0] * 8
+MyProbability = [0] * 8
 
 
 #駒設置関数
 def Set_Pieces(Board = [0]*36, ClickSquare = 0, Counter = 0, GameTurn = 0,\
-               MyRedPositon = [0]*4, MyBluePositon = [0]*4):
+               MyPositon = [0]*8):
 
     if GameTurn == 0:
 
@@ -115,7 +121,7 @@ def Set_Pieces(Board = [0]*36, ClickSquare = 0, Counter = 0, GameTurn = 0,\
             and Board[ClickSquare] == 0:
             
                 Board[ClickSquare] = MyRed
-                MyRedPositon[Counter] = 35 - ClickSquare
+                MyPosition[Counter] = 35 - ClickSquare
                 ClickFlag = 0
                 Counter += 1
 
@@ -124,7 +130,7 @@ def Set_Pieces(Board = [0]*36, ClickSquare = 0, Counter = 0, GameTurn = 0,\
             and Board[ClickSquare] == 0:
             
                 Board[ClickSquare] = MyBlue
-                MyBluePositon[Counter-4] = 35 - ClickSquare
+                MyPositon[Counter] = 35 - ClickSquare
                 ClickFlag = 0
                 Counter += 1
 
@@ -156,7 +162,7 @@ def Click_Squares(x = 0, y = 0, ClickSquare = 0):
 def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
                MoveSquares = [0] * 4, GameTurn = 0,\
                MyRedCount = 0, MyBlueCount = 0,\
-               MyRedPosition = [0]*4, MyBluePosition = [0]*4,\
+               MyPosition = [0]*8, MyProbability = [0]*8,\
                AiRedPosition = [0]*4, AiBluePosition = [0]*4,\
                ClickFlag = 0, Counter = 0):
 
@@ -169,7 +175,7 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
 
         return GameTurn, MoveFlag, MoveClickFlag, ClickSquare,\
                MyRedCount, MyBlueCount,\
-               MyRedPosition, MyBluePosition, AiRedPosition, AiBluePosition,\
+               MyPosition, MyProbability, AiRedPosition, AiBluePosition,\
                ClickFlag, Counter
     
 
@@ -181,6 +187,9 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
             for i in range(4):
                 if(AiRedPosition[i] == 35 - ClickSquare):
                     AiRedPosition[i] = None
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] += 2
                 
         elif Board[ClickSquare] == 4 :
             
@@ -188,12 +197,28 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
             for i in range(4):
                 if(AiBluePosition[i] == 35 - ClickSquare):
                     AiBluePosition[i] = None
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] += 2
 
-        for i in range(4):
-            if(MyRedPosition[i] == 35 - MyClickPiece):
-                MyRedPosition[i] = 35 - ClickSquare
-            if(MyBluePosition[i] == 35 - MyClickPiece):
-                MyBluePosition[i] = 35 - ClickSquare
+        for i in range(8):
+            if(MyPosition[i] == 35 - MyClickPiece):
+                
+                for j in range(4):
+                    if(MoveSquares[j] is not None):
+                        if(ClickSquare == MoveSquares[j]):
+                            if(j == 0):
+                                MyProbability[i] += 1
+                            elif(j == 1):
+                                MyProbability[i] -= 1
+                            elif(j == 2 and MyPosition[i] % 6 <= 3):
+                                MyProbability[i] -= 1
+                            elif(j == 3 and MyPosition[i] % 6 >= 4):
+                                MyProbability[i] -= 1
+                                
+                MyPosition[i] = 35 - ClickSquare
+                                
+            
                 
         Board[ClickSquare] = Board[MyClickPiece]
         Board[MyClickPiece] = 0
@@ -219,7 +244,7 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
         
     return GameTurn, MoveFlag, MoveClickFlag, ClickSquare,\
            MyRedCount, MyBlueCount,\
-           MyRedPosition, MyBluePosition, AiRedPosition, AiBluePosition,\
+           MyPosition, MyProbability, AiRedPosition, AiBluePosition,\
            ClickFlag, Counter
            
 
@@ -698,11 +723,37 @@ def AI_Normal_Move(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4
 
     return DecidePiece
 
+
+#相手の駒予想
+def AI_Expect_Piece(MyPosition = [0]*8, MyProbability = [0]*8, MyRedPosition = [0]*4, MyBluePosition = [0]*4):
+
+    for i in range(8):
+        for j in range(7, i, -1):
+            if(MyProbability[j] is not None):
+                if(MyProbability[j-1] is None or MyProbability[j] > MyProbability[j-1]):
+                    MyProbability[j], MyProbability[j-1] = MyProbability[j-1], MyProbability[j]
+                    MyPosition[j], MyPosition[j-1] = MyPosition[j-1], MyPosition[j]
+
+    for i in range(4):
+        if(i + MyRedCount < 4):
+            MyRedPosition[i] = MyPosition[i]
+        else:
+            MyRedPosition[i] = None
+
+    for i in range(4):
+        if(i + MyBlueCount < 4):
+            MyBluePosition[i] = MyPosition[i + 4 - MyRedCount]
+        else:
+            MyBluePosition[i] = None
+
+    return MyRedPosition, MyBluePosition
+
     
 
 #ＡＩ移動関数、まとめ
 def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4, \
                   MyRedPosition = [0]*4, MyBluePosition = [0]*4, GameTurn = 0,\
+                  MyPosition = [0]*8, MyProbability = [0]*8, \
                   EnemyRedCount = 0, EnemyBlueCount = 0, \
                   ClickFlag = 0, Counter = 0):
 
@@ -713,6 +764,7 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
         GameTurn += 1
 
         return AiRedPosition, AiBluePosition, MyRedPosition, MyBluePosition, \
+               MyPosition, MyProbability,\
                EnemyRedCount, EnemyBlueCount, GameTurn, ClickFlag, Counter
 
     #動かす駒決定
@@ -721,6 +773,9 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
 
     #動くマス位置
     MoveMass = 0
+    
+    #相手駒の予想
+    MyRedPosition, MyBluePosition = AI_Expect_Piece(MyPosition, MyProbability, MyRedPosition, MyBluePosition)
     
     #移動マス決定
     DecidePiece = AI_Blue_Check(AiBluePosition, MyRedPosition, MyBluePosition, DecidePiece)
@@ -742,14 +797,14 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
 
         if Board[MoveMass] ==  1:     
             EnemyRedCount += 1
-            for i in range(4):
-                if(MoveMass == MyRedPosition[i]):
-                    MyRedPosition[i] = None
+            for i in range(8):
+                if(MoveMass == MyPosition[i]):
+                    MyPosition[i] = None
         elif Board[MoveMass] == 2:    
             EnemyBlueCount += 1
-            for i in range(4):
-                if(MoveMass == MyBluePosition[i]):
-                    MyBluePosition[i] = None
+            for i in range(8):
+                if(MoveMass == MyPosition[i]):
+                    MyPosition[i] = None
 
         Board[MoveMass] = Board[AiRedPosition[DecidePiece[1]-1]]
         Board[AiRedPosition[DecidePiece[1]-1]] = 0
@@ -767,14 +822,14 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
 
         if Board[MoveMass] ==  1:     
             EnemyRedCount += 1
-            for i in range(4):
-                if(MoveMass == MyRedPosition[i]):
-                    MyRedPosition[i] = None
+            for i in range(8):
+                if(MoveMass == MyPosition[i]):
+                    MyPosition[i] = None
         elif Board[MoveMass] == 2:    
             EnemyBlueCount += 1
-            for i in range(4):
-                if(MoveMass == MyBluePosition[i]):
-                    MyBluePosition[i] = None
+            for i in range(8):
+                if(MoveMass == MyPosition[i]):
+                    MyPosition[i] = None
 
         Board[MoveMass] = Board[AiBluePosition[DecidePiece[1]-1]]
         Board[AiBluePosition[DecidePiece[1]-1]] = 0
@@ -789,6 +844,7 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
 
 
     return AiRedPosition, AiBluePosition, MyRedPosition, MyBluePosition, \
+           MyPosition, MyProbability,\
            EnemyRedCount, EnemyBlueCount, GameTurn, ClickFlag, Counter
         
 
@@ -810,7 +866,7 @@ while True:
                 
                 Counter, ClickFlag, GameTurn =\
                          Set_Pieces(Board, ClickSquare, Counter, GameTurn,\
-                                    MyRedPosition, MyBluePosition)
+                                    MyPosition)
 
         elif GameTurn == 1:
 
@@ -842,12 +898,12 @@ while True:
                             
                         GameTurn , MoveFlag , MoveClickFlag, ClickSquare,\
                         MyRedCount, MyBlueCount,\
-                        MyRedPosition, MyBluePosition, AiRedPosition, AiBluePosition,\
+                        MyPosition, MyProbability, AiRedPosition, AiBluePosition,\
                         ClickFlag, Counter= \
                                     Move_Piece(Board, ClickSquare, MyClickPiece,\
                                                MoveSquares, GameTurn,\
                                                MyRedCount, MyBlueCount,\
-                                               MyRedPosition, MyBluePosition,\
+                                               MyPosition, MyProbability,\
                                                AiRedPosition, AiBluePosition,\
                                                ClickFlag, Counter)
                         
@@ -856,9 +912,11 @@ while True:
                     if ClickFlag == 1:
 
                         AiRedPosition, AiBluePosition, MyRedPosition, MyBluePosition, \
+                        MyPosition, MyProbability,\
                         EnemyRedCount, EnemyBlueCount, GameTurn, ClickFlag, Counter = \
                             AI_Move_Piece(Board, AiRedPosition, AiBluePosition, \
                                           MyRedPosition, MyBluePosition, GameTurn,\
+                                          MyPosition, MyProbability,\
                                           EnemyRedCount, EnemyBlueCount, \
                                           ClickFlag, Counter)
                             
@@ -892,21 +950,21 @@ while True:
     
         screen.blit(boardImg, (100,100))
 
-        AiPosition = sysfont.render(str(AiRedPosition), False, (0,0,0))
-        AiPosition2 = sysfont.render(str(AiBluePosition), False, (0,0,0))
-        screen.blit(AiPosition, (800, 300))
-        screen.blit(AiPosition2, (800, 400))
-        AiPositions3 = sysfont.render(str(MyRedPosition), False, (0,0,0))
-        screen.blit(AiPositions3, (800, 500))
-        AiPositions4 = sysfont.render(str(MyBluePosition), False, (0,0,0))
-        screen.blit(AiPositions4, (800, 600))
+#        AiPosition = sysfont.render(str(AiRedPosition), False, (0,0,0))
+#        AiPosition2 = sysfont.render(str(AiBluePosition), False, (0,0,0))
+#        screen.blit(AiPosition, (800, 300))
+#        screen.blit(AiPosition2, (800, 400))
+#        AiPositions3 = sysfont.render(str(MyRedPosition), False, (0,0,0))
+#        screen.blit(AiPositions3, (800, 500))
+#        AiPositions4 = sysfont.render(str(MyBluePosition), False, (0,0,0))
+#        screen.blit(AiPositions4, (800, 600))
 
-        AiPositions5 = sysfont.render(str(TwiceWinFlag), False, (0,0,0))
-        screen.blit(AiPositions5, (800, 100))
-        AiPositions6 = sysfont.render(str(WinFlag), False, (0,0,0))
-        screen.blit(AiPositions6, (850, 100))
-        AiPositions7 = sysfont.render(str(GameTurn), False, (0,0,0))
-        screen.blit(AiPositions7, (800, 200))
+#        AiPositions5 = sysfont.render(str(TwiceWinFlag), False, (0,0,0))
+#        screen.blit(AiPositions5, (800, 100))
+#        AiPositions6 = sysfont.render(str(WinFlag), False, (0,0,0))
+#        screen.blit(AiPositions6, (850, 100))
+#        AiPositions7 = sysfont.render(str(GameTurn), False, (0,0,0))
+#        screen.blit(AiPositions7, (800, 200))
         
                 
         #ボード上の駒の表示
@@ -919,10 +977,10 @@ while True:
                 screen.blit(myblueImg, (100 + i%6*100, 100 + i//6*100))
                 
             elif Board[i] == 3:
-                screen.blit(enemyredImg, (100 + i%6*100, 100 + i//6*100))
+                screen.blit(enemypieceImg, (100 + i%6*100, 100 + i//6*100))
                 
             elif Board[i] == 4:
-                screen.blit(enemyblueImg, (100 + i%6*100, 100 + i//6*100))
+                screen.blit(enemypieceImg, (100 + i%6*100, 100 + i//6*100))
 
 
         #光るマスの表示
@@ -938,14 +996,14 @@ while True:
                                           100, 100), 5)
 
         #取った駒の表示
-#        for i in range(MyRedCount):
-#            screen.blit(enemyredImg, (750 + i*100, 200))               
- #       for i in range(MyBlueCount):
-  #          screen.blit(enemyblueImg, (750 + i*100, 300))            
-   #     for i in range(EnemyRedCount):
-    #        screen.blit(myredImg, (750 + i*100, 500))              
-     #   for i in range(EnemyBlueCount):
-      #      screen.blit(myblueImg, (750 + i*100, 600))
+        for i in range(MyRedCount):
+            screen.blit(enemyredImg, (750 + i*100, 200))               
+        for i in range(MyBlueCount):
+            screen.blit(enemyblueImg, (750 + i*100, 300))            
+        for i in range(EnemyRedCount):
+            screen.blit(myredImg, (750 + i*100, 500))              
+        for i in range(EnemyBlueCount):
+            screen.blit(myblueImg, (750 + i*100, 600))
 
 
     #ターン表示 勝利表示
