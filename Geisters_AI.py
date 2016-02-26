@@ -159,6 +159,7 @@ def Click_Squares(x = 0, y = 0, ClickSquare = 0):
 
 
 #駒移動用関数
+#同時に駒の期待値変更
 def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
                MoveSquares = [0] * 4, GameTurn = 0,\
                MyRedCount = 0, MyBlueCount = 0,\
@@ -727,6 +728,7 @@ def AI_Normal_Move(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4
 #相手の駒予想
 def AI_Expect_Piece(MyPosition = [0]*8, MyProbability = [0]*8, MyRedPosition = [0]*4, MyBluePosition = [0]*4):
 
+    #ソート(時間ないのでバブルソート)、変更すべき
     for i in range(8):
         for j in range(7, i, -1):
             if(MyProbability[j] is not None):
@@ -734,6 +736,7 @@ def AI_Expect_Piece(MyPosition = [0]*8, MyProbability = [0]*8, MyRedPosition = [
                     MyProbability[j], MyProbability[j-1] = MyProbability[j-1], MyProbability[j]
                     MyPosition[j], MyPosition[j-1] = MyPosition[j-1], MyPosition[j]
 
+    #赤、青を予想
     for i in range(4):
         if(i + MyRedCount < 4):
             MyRedPosition[i] = MyPosition[i]
@@ -859,7 +862,7 @@ while True:
     #ターン表示用if
     if TurnChange == 0:
 
-        #駒設置部分
+        #自駒設置部分
         if GameTurn == 0:
             
             if ClickFlag == 1:
@@ -868,6 +871,7 @@ while True:
                          Set_Pieces(Board, ClickSquare, Counter, GameTurn,\
                                     MyPosition)
 
+        #ＡＩ駒設置部分
         elif GameTurn == 1:
 
             if ClickFlag == 1:
@@ -882,18 +886,21 @@ while True:
             
 
             if WinFlag == 0:
-
+                
+                #脱出による勝利判定
                 WinFlag, TwiceWinFlag, WinCount = Twice_Win_Check(Board, WinFlag, TwiceWinFlag, GameTurn, WinCount, ClickFlag)
 
                 if GameTurn % 2 == 0:
-            
+                    
+                    #駒移動可能範囲測定
                     if (MoveClickFlag == False) and ( -1 < ClickSquare < 36 ) and\
                        (Counter == 0):
                         
                         ClickFlag, MoveSquares, MoveFlag,\
                         MoveClickFlag, MyClickPiece =\
                                    Check_Squares(Board, ClickSquare)
-                        
+
+                    #駒移動、ＡＩにおける各駒期待値変動    
                     else:
                             
                         GameTurn , MoveFlag , MoveClickFlag, ClickSquare,\
@@ -906,7 +913,8 @@ while True:
                                                MyPosition, MyProbability,\
                                                AiRedPosition, AiBluePosition,\
                                                ClickFlag, Counter)
-                        
+
+                #ＡＩ駒移動        
                 elif GameTurn % 2 == 1:
 
                     if ClickFlag == 1:
@@ -949,6 +957,8 @@ while True:
     if TurnChange == 0 and WinFlag == 0:
     
         screen.blit(boardImg, (100,100))
+
+#以下コメントアウトはバグ発生時に使用
 
 #        AiPosition = sysfont.render(str(AiRedPosition), False, (0,0,0))
 #        AiPosition2 = sysfont.render(str(AiBluePosition), False, (0,0,0))
