@@ -202,6 +202,28 @@ def Move_Piece(Board = [0] * 36, ClickSquare = 0, MyClickPiece = 0,\
                 if(MyPosition[i] == 35 - MyClickPiece):
                     MyProbability[i] += 2
 
+        if(ClickSquare > 5 and (Board[ClickSquare - 6] == 3 or Board[ClickSquare - 6] == 4)):
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] += 3
+        elif(ClickSquare % 6 != 0 and (Board[ClickSquare - 1] == 3 or Board[ClickSquare - 1] == 4)):
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] += 3
+        elif(ClickSquare % 6 != 5 and (Board[ClickSquare + 1] == 3 or Board[ClickSquare + 1] == 4)):
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] += 3
+        elif(ClickSquare < 30  and (Board[ClickSquare + 6] == 3 or Board[ClickSquare + 6] == 4)):
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] += 3
+
+        if( int(ClickSquare / 6 + ClickSquare % 6) < 5):
+            for i in range(8):
+                if(MyPosition[i] == 35 - MyClickPiece):
+                    MyProbability[i] -= 5 - int(ClickSquare / 6 + ClickSquare % 6)
+
         for i in range(8):
             if(MyPosition[i] == 35 - MyClickPiece):
                 
@@ -660,7 +682,7 @@ def AI_Normal_Move(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4
                     AroundExpectation[2] += MyBlueCount * MyBlueCount
             if(AiBluePosition[i] % 6 < 4):
                 if(Board[AiBluePosition[i] + 2] == 1 or Board[AiBluePosition[i] + 2] == 2):
-                    AroundExpectation[1] += MyBlueCount3 * MyBlueCount
+                    AroundExpectation[1] += MyBlueCount * MyBlueCount
             if(AiBluePosition[i] < 24):
                 if(Board[AiBluePosition[i] + 12] == 1 or Board[AiBluePosition[i] + 12] == 2):
                     AroundExpectation[0] += MyBlueCount * MyBlueCount
@@ -779,6 +801,9 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
     
     #相手駒の予想
     MyRedPosition, MyBluePosition = AI_Expect_Piece(MyPosition, MyProbability, MyRedPosition, MyBluePosition)
+
+    print(str(MyRedPosition))
+    print(str(MyBluePosition))
     
     #移動マス決定
     DecidePiece = AI_Blue_Check(AiBluePosition, MyRedPosition, MyBluePosition, DecidePiece)
