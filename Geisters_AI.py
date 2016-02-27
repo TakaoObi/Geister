@@ -802,8 +802,6 @@ def AI_Move_Piece(Board = [0]*36, AiRedPosition = [0]*4, AiBluePosition = [0]*4,
     #相手駒の予想
     MyRedPosition, MyBluePosition = AI_Expect_Piece(MyPosition, MyProbability, MyRedPosition, MyBluePosition)
 
-    print(str(MyRedPosition))
-    print(str(MyBluePosition))
     
     #移動マス決定
     DecidePiece = AI_Blue_Check(AiBluePosition, MyRedPosition, MyBluePosition, DecidePiece)
